@@ -64,14 +64,16 @@ def main():
                     print("\nClosing Connection Socket\n")
                     conn_socket.close()
 
-            except KeyboardInterrupt as e:
-                print("\nClosing Connection Socket\n")
-                conn_socket.close()
+            except BaseException as e:
+                if conn_socket:
+                    print("\nClosing Connection Socket\n")
+                    conn_socket.close()
                 raise e
 
-    except KeyboardInterrupt:
-        print("\nClosing Server Socket\n")
-        server_socket.close()
+    except BaseException:
+        if server_socket:
+            print("\nClosing Server Socket\n")
+            server_socket.close()
         exit()
 
 

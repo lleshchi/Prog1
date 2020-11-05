@@ -34,7 +34,6 @@ def main():
 
     args = parser()
 
-    # FIXME -- TEST PUT REQUEST
     if args.Path[0] is not "/":
         args.Path = "/" + args.Path
     my_request = Request(args.Name, int(args.Port), args.Method, args.Path)
@@ -49,16 +48,18 @@ def main():
         if my_request.method == "GET":
             msg = my_request.method + " " + my_request.path + " " + "HTTP/1.1\r\nHost:" + my_request.name + "\r\n\r\n"
             client_socket.sendall(msg.encode())
+            client_socket.shutdown(1)   # Good etiquette, let server know client is done sending but still receiving
         if my_request.method == "PUT":
             msg = my_request.method + " " + my_request.path + "\r\n\r\n"
             client_socket.sendall(msg.encode())
             file = open("." + my_request.path, "rb")
             client_socket.send(file.read())
+            client_socket.shutdown(1)  # Good etiquette, let server know client is done sending but still receiving
             file.close()
         server_response = client_socket.recv(4096)
         while server_response:
             print(server_response.decode() + "\n")
-            server_response = client_socket.recv(4096)
+            server_response = client_socket.recv(4096)  # Must be called until no data is left (returns 0 bytes)
 
         client_socket.close()
         print("\nClosing Client Socket\n")
