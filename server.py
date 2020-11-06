@@ -1,4 +1,3 @@
-import sys
 import socket
 import argparse
 import os
@@ -49,22 +48,27 @@ def main():
                         # Look in current directory (I know I know, there's a better way to do this)
                         # Open file with that name for reading
                         # Send 200 OK confirmation to client (make sure to encode it from string to bytes)
-
                         path = "." + path
                         file = open(path, "rb")
                         msg = "HTTP/1.1 200 OK\r\n"
                         conn_socket.send(msg.encode())
                         msg = "Content-Type: text/html\r\n"
                         conn_socket.send(msg.encode())
+
+                        # While there is more to read in file, continue reading and sending to client
                         data = file.read()
                         while data:
                             conn_socket.send(data)
                             data = file.read()
 
+                    # If file is not found or directory does not exist, send error message to client
                     except (FileNotFoundError, IsADirectoryError):
                         msg = "HTTP/1.1 404 Not Found\r\n\r\n Sorry, your file request was not found :("
                         conn_socket.send(msg.encode())
 
+                # If put method, create tmp directory, open file that client referred within the tmp directory
+                # And read data from socket and write it all to the file while there is more to read
+                # Once done with steps above, send 200 OK File Created message (encoded as bytes from string)
                 if method == "PUT":
                     print(path)
                     if not os.path.exists("tmp/"):
@@ -77,14 +81,17 @@ def main():
                     msg = "200 OK File Created\r\n"
                     conn_socket.send(msg.encode())
 
+            # Make sure to close connection socket (even if exception occurs)
             finally:
                 if conn_socket:
                     print("\nClosing Connection Socket\n")
                     conn_socket.close()
 
+    # Exit gracefully on keyboard interrupt
     except KeyboardInterrupt:
         exit()
 
+    # Make sure to close server socket (even if exception occurs)
     finally:
         if server_socket:
             print("\nClosing Server Socket\n")
